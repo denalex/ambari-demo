@@ -1,0 +1,13 @@
+<view>
+  <name>RABBITMQ</name>
+  <label>The RabbitMQ Server View</label>
+  <description>Manage queues in the RabbitMQ broker.</description>
+  <version>1.0.0</version>
+  <resource>
+    <name>rabbitmq</name>
+    <service-class>io.pivotal.ambari.view.rabbitmq.RabbitMQServerResource</service-class>
+  </resource>
+  <instance>
+    <name>INSTANCE_1</name>
+  </instance>
+</view>
