@@ -1,67 +1,64 @@
 package io.pivotal.ambari.view.rabbitmq;
 
-import org.apache.ambari.view.ViewContext;
+import java.io.IOException;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import java.io.IOException;
-import java.util.List;
+import org.apache.ambari.view.ViewContext;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 /**
  * The RabbitMQ Server resource.
  */
 public class RabbitMQServerResource {
 
-	/**
-	 * The view context.
-	 */
-	@Inject
-	ViewContext context;
-
-	private RabbitMQService service = new RabbitMQService();
-
-	/**
-	 * Handles: GET /calculator Get the calculator usage.
-	 *
-	 * @param headers
-	 *            http headers
-	 * @param ui
-	 *            uri info
-	 *
-	 * @return the response including the usage of the calculator resource
-	 */
+	@Inject	ViewContext context;
+		
 	@GET
 	@Path("/queues")
-	@Produces({ "text/html" })
+	@Produces({ "text/plain" })
 	public Response listQueues(@Context HttpHeaders headers, @Context UriInfo ui) throws IOException {
+		
 		String response;
 		try {
-			List<QueueInfo> queues = service.getQueues("c6404", 15672);
-			response = buildResponse(queues);
+			response = getResponse("c6404", 15672, "/api/queues");
 		} catch (Exception e) {
 			response = "ERROR while getting queue list : " + e.getMessage();
 		}
 
-		return Response.ok(response).type("text/html").build();
+		return Response.ok(response).type("text/plain").build();
 	}
+	
+	private String getResponse(String host, int port, String url) throws Exception {
 
-	private String buildResponse(List<QueueInfo> queues) {
-		StringBuilder response = new StringBuilder("<h2>List of Queues:</h2><ul>");
-		for (QueueInfo queue : queues) {
-			response.append(String.format("<li><b>%s</b> - %d total messages.</li>", queue.getName(), queue.getTotalMessages()));
-		}
-		response.append("</ul>");
-		String result = response.toString();
-		System.out.println("Prepared response : " + result);
-		return result;
+		String result = null;
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+        try {
+        	        	
+            httpclient.getCredentialsProvider().setCredentials(
+                    new AuthScope(host, port),
+                    new UsernamePasswordCredentials("guest", "guest"));
+
+            HttpGet httpget = new HttpGet(String.format("http://%s:%d%s", host, port, url));
+            ResponseHandler<String> responseHandler = new BasicResponseHandler();
+            result = httpclient.execute(httpget, responseHandler);            
+            
+        } finally {
+            httpclient.getConnectionManager().shutdown();
+        }
+        return result;
 	}
 
 }

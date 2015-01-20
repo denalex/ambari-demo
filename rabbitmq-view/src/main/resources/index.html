@@ -1,0 +1,61 @@
+<html>
+<head>
+    <style>
+        body{
+            text-align: center;
+            font-family: arial;
+        }
+        .button{
+            margin:20px;
+            font-size:16px;
+            font-weight: bold;
+            padding:5px 10px;
+        }
+        ul{ 
+        	margin: 0;
+			padding: 0;
+			list-style-type: none; 
+        }
+        
+    </style>
+</head>
+<body>
+    <h1>RabbitMQ Management View</h1>
+    <br />
+    <input type="button" value="Get List of Queues" class="button" />
+    <br />
+    <span id="response"></span>
+    <div id="queues">
+    </div>
+
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+
+    <script>
+      function _getSimpleResourceUri() {
+        var parts = window.location.pathname.match(/\/[^\/]*/g);
+        var view = parts[1];
+        var version = '/versions' + parts[2];
+        var instance = parts[3];
+        return '/api/v1/views' + view + version + '/instances' + instance+'/resources/rabbitmq/queues';
+      }
+        $(document).ready(function() {
+            $('.button').click(function(){
+                $.ajax({
+                    url: _getSimpleResourceUri(),
+                    dataType: "text",
+                    success: function(data) {
+                        var json = $.parseJSON(data);
+                        //$('#response').html('Value: ' + data);   
+                        $("#queues").children().remove();
+                        var list = $("#queues").append('<ul></ul>').find('ul');
+                        $.each(json, function (i, value) {
+                            list.append("<li>" + value.name + "</li>");                
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
